@@ -30,17 +30,18 @@ app.get('/', (req, res) => {
       'POST /predictions': 'Create AI rotation prediction',
       'GET /predictions/:id': 'Get prediction status/result'
     },
-    usage: 'Include Authorization: Token YOUR_REPLICATE_API_KEY header'
+    usage: 'API key managed server-side via environment variable'
   });
 });
 
 // Proxy endpoint for creating predictions
 app.post('/predictions', async (req, res) => {
   try {
-    const apiKey = req.headers.authorization;
-    if (!apiKey || !apiKey.startsWith('Token ')) {
-      return res.status(401).json({ 
-        error: 'Missing or invalid Authorization header. Use: Authorization: Token YOUR_API_KEY' 
+    // Use server-side environment variable for API key (more secure)
+    const apiKey = process.env.REPLICATE_API_KEY;
+    if (!apiKey) {
+      return res.status(500).json({ 
+        error: 'Server configuration error: REPLICATE_API_KEY environment variable not set' 
       });
     }
 
@@ -51,7 +52,7 @@ app.post('/predictions', async (req, res) => {
     const response = await fetch('https://api.replicate.com/v1/predictions', {
       method: 'POST',
       headers: {
-        'Authorization': apiKey,
+        'Authorization': `Token ${apiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(req.body)
@@ -79,10 +80,11 @@ app.post('/predictions', async (req, res) => {
 // Proxy endpoint for checking prediction status
 app.get('/predictions/:id', async (req, res) => {
   try {
-    const apiKey = req.headers.authorization;
-    if (!apiKey || !apiKey.startsWith('Token ')) {
-      return res.status(401).json({ 
-        error: 'Missing or invalid Authorization header. Use: Authorization: Token YOUR_API_KEY' 
+    // Use server-side environment variable for API key (more secure)
+    const apiKey = process.env.REPLICATE_API_KEY;
+    if (!apiKey) {
+      return res.status(500).json({ 
+        error: 'Server configuration error: REPLICATE_API_KEY environment variable not set' 
       });
     }
 
@@ -92,7 +94,7 @@ app.get('/predictions/:id', async (req, res) => {
     const response = await fetch(`https://api.replicate.com/v1/predictions/${predictionId}`, {
       method: 'GET',
       headers: {
-        'Authorization': apiKey,
+        'Authorization': `Token ${apiKey}`,
       }
     });
 
@@ -148,7 +150,7 @@ app.listen(PORT, () => {
   console.log(`🌍 Health check: http://localhost:${PORT}`);
   console.log('');
   console.log('🔧 Ready to proxy Replicate API calls');
-  console.log('💡 Include Authorization: Token YOUR_REPLICATE_API_KEY in requests');
+  console.log('💡 API key managed via REPLICATE_API_KEY environment variable');
   console.log('');
   console.log('📋 Endpoints:');
   console.log(`   POST ${PORT === 3001 ? 'http://localhost:3001' : process.env.RAILWAY_STATIC_URL || 'https://your-app.railway.app'}/predictions`);
