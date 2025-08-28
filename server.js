@@ -28,7 +28,8 @@ app.get('/', (req, res) => {
     message: 'Figma AI Rotation Proxy Server',
     endpoints: {
       'POST /predictions': 'Create AI rotation prediction',
-      'GET /predictions/:id': 'Get prediction status/result'
+      'GET /predictions/:id': 'Get prediction status/result',
+      'POST /validate-reset-key': 'Validate secure reset keys for Aleto plugin'
     },
     usage: 'API key managed server-side via environment variable'
   });
@@ -123,6 +124,72 @@ app.get('/predictions/:id', async (req, res) => {
   }
 });
 
+// Secure reset key validation endpoint for Aleto plugin
+app.post('/validate-reset-key', async (req, res) => {
+  try {
+    const { resetKey } = req.body;
+    
+    console.log('🔐 Validating reset key for Aleto plugin...');
+    
+    if (!resetKey) {
+      return res.status(400).json({
+        success: false,
+        message: 'Reset key is required'
+      });
+    }
+
+    // Secure reset keys - stored server-side only, never in client code
+    // These keys are completely secure and cannot be extracted from client inspection
+    const SECURE_RESET_KEYS = {
+      // Reset to default (2 credits) - for testing and admin use
+      'ALETO_RESET_DEFAULT_2024': {
+        resetType: 'default',
+        creditsGranted: 0, // Not used for reset operations
+        message: 'Credits reset to default (2 credits)'
+      },
+      // Reset to zero - for testing edge cases
+      'ALETO_RESET_ZERO_2024': {
+        resetType: 'zero', 
+        creditsGranted: 0,
+        message: 'Credits reset to zero'
+      },
+      // Development key (reset to default) - for development/testing
+      'DEV_RESET_CREDITS_2024': {
+        resetType: 'default',
+        creditsGranted: 0,
+        message: 'Development reset to default (2 credits)'
+      },
+      // Additional secure keys can be added here as needed
+      'ALETO_ADMIN_RESET_2024': {
+        resetType: 'default',
+        creditsGranted: 0,
+        message: 'Admin reset to default (2 credits)'
+      }
+    };
+    
+    if (SECURE_RESET_KEYS[resetKey]) {
+      console.log('✅ Valid reset key found:', SECURE_RESET_KEYS[resetKey].resetType);
+      res.json({
+        success: true,
+        ...SECURE_RESET_KEYS[resetKey]
+      });
+    } else {
+      console.log('❌ Invalid reset key provided');
+      res.json({
+        success: false,
+        message: 'Invalid reset key'
+      });
+    }
+    
+  } catch (error) {
+    console.error('❌ Reset key validation error:', error.message);
+    res.status(500).json({
+      success: false,
+      message: 'Reset key validation failed'
+    });
+  }
+});
+
 // Catch all other routes
 app.use('*', (req, res) => {
   res.status(404).json({ 
@@ -130,7 +197,8 @@ app.use('*', (req, res) => {
     availableRoutes: [
       'GET /',
       'POST /predictions', 
-      'GET /predictions/:id'
+      'GET /predictions/:id',
+      'POST /validate-reset-key'
     ]
   });
 });
@@ -155,4 +223,7 @@ app.listen(PORT, () => {
   console.log('📋 Endpoints:');
   console.log(`   POST ${PORT === 3001 ? 'http://localhost:3001' : process.env.RAILWAY_STATIC_URL || 'https://your-app.railway.app'}/predictions`);
   console.log(`   GET  ${PORT === 3001 ? 'http://localhost:3001' : process.env.RAILWAY_STATIC_URL || 'https://your-app.railway.app'}/predictions/{id}`);
+  console.log(`   POST ${PORT === 3001 ? 'http://localhost:3001' : process.env.RAILWAY_STATIC_URL || 'https://your-app.railway.app'}/validate-reset-key`);
+  console.log('');
+  console.log('🔐 Secure reset keys configured for Aleto credit management');
 });
