@@ -25,11 +25,11 @@ app.use((req, res, next) => {
 app.get('/', (req, res) => {
   res.json({
     status: 'ok',
-    message: 'Figma AI Rotation Proxy Server',
+    message: 'Figma AI Vectorizer Proxy Server',
     endpoints: {
-      'POST /predictions': 'Create AI rotation prediction',
+      'POST /predictions': 'Create AI vectorization prediction',
       'GET /predictions/:id': 'Get prediction status/result',
-      'POST /validate-reset-key': 'Validate secure reset keys for Aleto plugin'
+      'POST /validate-reset-key': 'Validate secure reset keys for Vectorizer plugin'
     },
     usage: 'API key managed server-side via environment variable'
   });
@@ -142,13 +142,13 @@ app.post('/validate-reset-key', async (req, res) => {
     // These keys are completely secure and cannot be extracted from client inspection
     const SECURE_RESET_KEYS = {
       // Reset to default (2 credits) - for testing and admin use
-      'ALETO_RESET_DEFAULT_2024': {
+      'VECTORIZER_RESET_DEFAULT_2024': {
         resetType: 'default',
         creditsGranted: 0, // Not used for reset operations
         message: 'Credits reset to default (2 credits)'
       },
       // Reset to zero - for testing edge cases
-      'ALETO_RESET_ZERO_2024': {
+      'VECTORIZER_RESET_ZERO_2024': {
         resetType: 'zero', 
         creditsGranted: 0,
         message: 'Credits reset to zero'
@@ -160,7 +160,7 @@ app.post('/validate-reset-key', async (req, res) => {
         message: 'Development reset to default (2 credits)'
       },
       // Additional secure keys can be added here as needed
-      'ALETO_ADMIN_RESET_2024': {
+      'VECTORIZER_ADMIN_RESET_2024': {
         resetType: 'default',
         creditsGranted: 0,
         message: 'Admin reset to default (2 credits)'
@@ -213,7 +213,7 @@ app.use((error, req, res, next) => {
 });
 
 app.listen(PORT, () => {
-  console.log('🚀 Figma AI Rotation Proxy Server');
+  console.log('🚀 Figma AI Vectorizer Proxy Server');
   console.log(`📡 Server running on port ${PORT}`);
   console.log(`🌍 Health check: http://localhost:${PORT}`);
   console.log('');
@@ -225,5 +225,5 @@ app.listen(PORT, () => {
   console.log(`   GET  ${PORT === 3001 ? 'http://localhost:3001' : process.env.RAILWAY_STATIC_URL || 'https://your-app.railway.app'}/predictions/{id}`);
   console.log(`   POST ${PORT === 3001 ? 'http://localhost:3001' : process.env.RAILWAY_STATIC_URL || 'https://your-app.railway.app'}/validate-reset-key`);
   console.log('');
-  console.log('🔐 Secure reset keys configured for Aleto credit management');
+  console.log('🔐 Secure reset keys configured for Vectorizer credit management');
 });
