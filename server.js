@@ -141,11 +141,11 @@ app.post('/validate-reset-key', async (req, res) => {
     // Secure reset keys - stored server-side only, never in client code
     // These keys are completely secure and cannot be extracted from client inspection
     const SECURE_RESET_KEYS = {
-      // Reset to default (2 credits) - for testing and admin use
+      // Reset to default (3 credits) - for testing and admin use
       'VECTORCRAFT_RESET_DEFAULT_2024': {
         resetType: 'default',
         creditsGranted: 0, // Not used for reset operations
-        message: 'Credits reset to default (2 credits)'
+        message: 'Credits reset to default (3 credits)'
       },
       // Reset to zero - for testing edge cases
       'VECTORCRAFT_RESET_ZERO_2024': {
@@ -157,13 +157,13 @@ app.post('/validate-reset-key', async (req, res) => {
       'DEV_RESET_CREDITS_2024': {
         resetType: 'default',
         creditsGranted: 0,
-        message: 'Development reset to default (2 credits)'
+        message: 'Development reset to default (3 credits)'
       },
       // Additional secure keys can be added here as needed
       'VECTORCRAFT_ADMIN_RESET_2024': {
         resetType: 'default',
         creditsGranted: 0,
-        message: 'Admin reset to default (2 credits)'
+        message: 'Admin reset to default (3 credits)'
       }
     };
     
