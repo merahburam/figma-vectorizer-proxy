@@ -190,6 +190,89 @@ app.post('/validate-reset-key', async (req, res) => {
   }
 });
 
+// Credit synchronization endpoints for cross-platform consistency
+app.post('/sync-credits', async (req, res) => {
+  try {
+    const { userId, creditData } = req.body;
+    
+    if (!userId) {
+      return res.status(400).json({
+        success: false,
+        message: 'User ID is required for credit sync'
+      });
+    }
+
+    // Store credit data on server (in production, use a database)
+    // For now, using in-memory storage as proof of concept
+    if (!global.userCredits) {
+      global.userCredits = new Map();
+    }
+    
+    global.userCredits.set(userId, creditData);
+    
+    console.log('💾 Credits synced for user:', userId, 'Credits:', creditData.maxImages - creditData.usedImages);
+    
+    res.json({
+      success: true,
+      message: 'Credits synced successfully',
+      creditData: creditData
+    });
+    
+  } catch (error) {
+    console.error('❌ Credit sync error:', error.message);
+    res.status(500).json({
+      success: false,
+      message: 'Credit sync failed'
+    });
+  }
+});
+
+app.get('/sync-credits/:userId', async (req, res) => {
+  try {
+    const { userId } = req.params;
+    
+    if (!userId) {
+      return res.status(400).json({
+        success: false,
+        message: 'User ID is required'
+      });
+    }
+
+    // Retrieve credit data from server
+    if (!global.userCredits) {
+      global.userCredits = new Map();
+    }
+    
+    const creditData = global.userCredits.get(userId);
+    
+    if (creditData) {
+      console.log('📥 Credits retrieved for user:', userId, 'Credits:', creditData.maxImages - creditData.usedImages);
+      res.json({
+        success: true,
+        creditData: creditData
+      });
+    } else {
+      // No data found, return default
+      res.json({
+        success: true,
+        creditData: {
+          usedImages: 0,
+          maxImages: 3,
+          hasCredits: false,
+          usedLicenses: []
+        }
+      });
+    }
+    
+  } catch (error) {
+    console.error('❌ Credit retrieval error:', error.message);
+    res.status(500).json({
+      success: false,
+      message: 'Credit retrieval failed'
+    });
+  }
+});
+
 // Catch all other routes
 app.use('*', (req, res) => {
   res.status(404).json({ 
@@ -198,7 +281,9 @@ app.use('*', (req, res) => {
       'GET /',
       'POST /predictions', 
       'GET /predictions/:id',
-      'POST /validate-reset-key'
+      'POST /validate-reset-key',
+      'POST /sync-credits',
+      'GET /sync-credits/:userId'
     ]
   });
 });
