@@ -183,6 +183,12 @@ app.post("/validate-reset-key", async (req, res) => {
         message:
           "Credits restored: Starter Pack (500 credits) - Order weYK1fdLBkt4Z1oLctYF2g==",
       },
+      // Test recovery key - for testing the recovery flow before sending to customers
+      TEST_RECOVERY_KEY_100_2026: {
+        resetType: "recovery",
+        creditsGranted: 100,
+        message: "Test credits added: 100 credits for testing recovery system",
+      },
     };
 
     if (SECURE_RESET_KEYS[resetKey]) {
