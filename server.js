@@ -37,6 +37,7 @@ app.get("/", (req, res) => {
       "POST /sync-credits": "Sync user credits to database",
       "GET /sync-credits/:userId": "Get user credits from database",
       "POST /log-purchase": "Log Gumroad purchase to database",
+      "POST /check-license": "Check if license key has been used",
     },
     usage: "API key managed server-side via environment variable",
     database: process.env.DATABASE_URL ? "connected" : "not configured",
@@ -425,6 +426,64 @@ app.post("/log-purchase", async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Failed to log purchase",
+    });
+  }
+});
+
+// Check if a license key has already been used (cross-device validation)
+app.post("/check-license", async (req, res) => {
+  try {
+    const { userId, licenseKey } = req.body;
+
+    if (!userId || !licenseKey) {
+      return res.status(400).json({
+        success: false,
+        message: "User ID and license key are required",
+      });
+    }
+
+    // Check if this license exists in the database
+    const existingPurchase = await db.checkLicenseKey(licenseKey);
+
+    if (existingPurchase) {
+      // License exists in database
+      if (existingPurchase.user_id === userId) {
+        // Same user trying to use it again
+        console.log("🔒 License already used by this user:", userId);
+        res.json({
+          alreadyUsed: true,
+          message:
+            "This license key has already been used. Each license can only be used once.",
+          ownedByCurrentUser: true,
+        });
+      } else {
+        // Different user trying to use it
+        console.log(
+          "⚠️  License already used by different user:",
+          existingPurchase.user_id
+        );
+        res.json({
+          alreadyUsed: true,
+          message: "This license key has already been used by another user.",
+          ownedByCurrentUser: false,
+        });
+      }
+    } else {
+      // License not found in database - it's available
+      console.log(
+        "✅ License key available:",
+        licenseKey.substring(0, 10) + "..."
+      );
+      res.json({
+        alreadyUsed: false,
+        message: "License key is available for use",
+      });
+    }
+  } catch (error) {
+    console.error("❌ License check error:", error.message);
+    res.status(500).json({
+      success: false,
+      message: "Failed to check license",
     });
   }
 });
